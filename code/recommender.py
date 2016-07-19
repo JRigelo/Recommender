@@ -1,94 +1,48 @@
 """ Recommender capstone model: SVD, NMF, item-item, user-user
 
-Data:
-+------+-------+--------+
-| user | movie | rating |
-+------+-------+--------+
-| 196  |  242  |   3    |
-| 186  |  302  |   3    |
-|  22  |  377  |   1    |
-| 244  |   51  |   2    |
-| 166  |  346  |   1    |
-| 298  |  474  |   4    |
-| 115  |  265  |   2    |
-| 253  |  465  |   5    |
-| 305  |  451  |   3    |
-|  6   |   86  |   3    |
-+------+-------+--------+
-
 """
 import pandas as pd
 from scipy import sparse
 import numpy as np
 import data_prep as dp
 import graphlab as gl
+import json
+from pprint import pprint
 
 def load_sparse_matrix(filename):
     y = np.load(filename)
     z = sparse.coo_matrix((y['data'],(y['row'],y['col'])),shape=y['shape'])
     return z.tolil()
 
-def training_data(df):
-    """Create a FactorizationRecommender
-    that learns latent factors for each user and item and uses
-    them to make rating predictions."""
+def load_input_data(filename):
+    return gl.load_model(filename)
 
-    # SFrame (dictionary from df)
-    sf = gl.SFrame(df[['userID', 'productID', 'rating']])
+def recom_products(user, item_ids, item_ratings, train_model):
+    """INPUT: a string, two lists, trained model.
+       OUPUT: a list of recommended products"""
+    users_ids = []
+    for i in range(0,len(item_ids)):
+        users_ids.append(user)
 
-    # Create a matrix factorization model
-    rec = gl.recommender.factorization_recommender.create(
-            sf,
-            user_id='userID',
-            item_id='productID',
-            target='rating',
-            solver='als',
-            side_data_factorization=False)
-    rec.save('../data/model_test')
-    return rec
-
-def pred_products(user, item_ids, item_ratings, rec):
-    """INPUT: three lists, trained matrix fact.
-       OUPUT:
-    """
-    newdata = gl.SFrame({'userID':  user , 'productID': item_ids, 'rating': item_ratings})
-    return rec.recommend(users=['Chris'], new_observation_data=newdata)
-
-
-
-
+    # making a suggestion model
+    newdata = gl.SFrame({'userID': users_ids, 'productID': item_ids, 'rating': item_ratings})
+    return train_model.recommend(users=[user], new_observation_data=newdata)
 
 if __name__ =='__main__':
-    games_M = load_sparse_matrix('../data/movies_games_M.npz')
+    # Loading trainning model
+    t_model_m_g = load_input_data('../data/model_m_g')
+    t_model_m = load_input_data('../data/model_m')
+    t_model_g = load_input_data('../data/model_g')
 
-    #For Graphlab usage we need to go back to use dataframes as input
-    # Data files
-    games_file = '../data/ratings_Video_Games.csv'
-    movies_file = '../data/ratings_Movies_and_TV.csv'
+    # toy example to test recommender
+    user = 'Joyce'
+    item_ids = ['0439671418', 'B00004W0W7', '0439715571', '6301759338', '0700099867', \
+                '3868832815', '0970154097', 'B00007JME6', '1886846847', 'B0007MWZIG']
+    item_ratings = [1, 1, 5, 3, 1, 1, 4, 3, 1, 1]
 
-    # Cleaning datasets
-    df_games = dp.data_cleaner(games_file)
-    df_movies = dp.data_cleaner(movies_file)
-
-    # inner join of two datasets on usersID
-    df_inter = dp.data_intersection(df_movies, df_games)
-
-    #SFrame applied to the inner-joined dataframe
-    sf_mg = gl.SFrame(df_inter[['userID', 'productID_x', 'rating_x', 'productID_y','rating_y']])
-
-    # Training Data
-    #train_m = training_data(df_movies)
-    train_g = training_data(df_games)
-
-    trained_model_g = gl.load_model('../data/model_test')
-
-    # making a suggestion
-    user = ['Chris']
-    item_ids = ["0078764343"]
-    ratings = [3]
-    recommendation = pred_products(user, item_ids, ratings, trained_model_g)
-    print recommendation
-
-    """# Predicting a movie
-    one_datapoint_sf = gl.SFrame({'userID': [2], 'productID': [2]})
-    print "rating:", rec_m.predict(one_datapoint_sf)[0]"""
+    # making a suggestion m_g model
+    recommendation_m_g = recom_products(user, item_ids, item_ratings, t_model_m_g)
+    # making a suggestion m model
+    recommendation_m = recom_products(user, item_ids, item_ratings, t_model_m)
+    # making a suggestion g model
+    recommendation_g = recom_products(user, item_ids, item_ratings, t_model_g)
