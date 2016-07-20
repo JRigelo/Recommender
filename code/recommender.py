@@ -8,6 +8,7 @@ import data_prep as dp
 import graphlab as gl
 import json
 from pprint import pprint
+import training_model as tm
 
 def load_sparse_matrix(filename):
     y = np.load(filename)
@@ -17,7 +18,7 @@ def load_sparse_matrix(filename):
 def load_input_data(filename):
     return gl.load_model(filename)
 
-def recom_products(user, item_ids, item_ratings, train_model):
+def games_movies_recom(user, item_ids, item_ratings, train_model):
     """INPUT: a string, two lists, trained model.
        OUPUT: a list of recommended products"""
     users_ids = []
@@ -26,7 +27,17 @@ def recom_products(user, item_ids, item_ratings, train_model):
 
     # making a suggestion model
     newdata = gl.SFrame({'userID': users_ids, 'productID': item_ids, 'rating': item_ratings})
-    return train_model.recommend(users=[user], new_observation_data=newdata)
+    return train_model.recommend(users=[user], k= 10, new_observation_data=newdata)
+
+def recommender_(user, item_ids, item_ratings, train_model_mg, train_model_m, train_model_g):
+    # getting the best recommendations from movies & games model
+    best_recom = games_movies_recom(user, item_ids, item_ratings, train_model_mg)
+    print 'best_recom productID', best_recom['productID']
+    # recommending movies and games trough item similarity with other datasets
+    rec1 = train_model_m.get_similar_items(best_recom['productID'], k=3)
+    rec2 = train_model_g.get_similar_items(best_recom['productID'], k=3)
+    return rec1, rec2
+
 
 if __name__ =='__main__':
     # Loading trainning model
@@ -40,9 +51,7 @@ if __name__ =='__main__':
                 '3868832815', '0970154097', 'B00007JME6', '1886846847', 'B0007MWZIG']
     item_ratings = [1, 1, 5, 3, 1, 1, 4, 3, 1, 1]
 
-    # making a suggestion m_g model
-    recommendation_m_g = recom_products(user, item_ids, item_ratings, t_model_m_g)
-    # making a suggestion m model
-    recommendation_m = recom_products(user, item_ids, item_ratings, t_model_m)
-    # making a suggestion g model
-    recommendation_g = recom_products(user, item_ids, item_ratings, t_model_g)
+    # getting the recommendations from the three models
+    recom_m, recom_g = recommender_(user, item_ids, item_ratings, t_model_m_g, t_model_m, t_model_g)
+    print 'Recommended movies', recom_m
+    print 'Recommended games', recom_g
