@@ -309,11 +309,11 @@ def output_api(dict_movies, dict_games):
     mg_out = defaultdict(list)
     for v1, v2 in zip(dict_movies['productID'], dict_movies['imUrl']):
             mg_out[v1].append(v2)
-            mg_out[v1].append('www.amazon.com/dp/' + v1)
+            mg_out[v1].append('http://amazon.com/dp/' + v1)
 
     for v1, v2 in zip(dict_games['productID'], dict_games['imUrl']):
             mg_out[v1].append(v2)
-            mg_out[v1].append('www.amazon.com/dp/' + v1)
+            mg_out[v1].append('http://amazon.com/dp/' + v1)
     # saving to a pickle file
     pickle.dump( mg_out, open( "../data/output_api.p", "wb" ) )
 
