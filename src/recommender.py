@@ -12,6 +12,8 @@ import training_model as tm
 import cPickle as pickle
 import random
 
+
+
 def load_sparse_matrix(filename):
     y = np.load(filename)
     z = sparse.coo_matrix((y['data'],(y['row'],y['col'])),shape=y['shape'])
@@ -31,15 +33,16 @@ def games_movies_recom(user, item_ids, item_ratings, train_model):
     newdata = gl.SFrame({'userID': users_ids, 'productID': item_ids, 'rating': item_ratings})
     return train_model.recommend(users=[user], k=3, new_observation_data=newdata)
 
-def recommender_process(user, item_ids, item_ratings, train_model_mg, train_model_m, train_model_g):
+def recommender_process(user, item_ids, item_ratings, train_model_mg, train_model_m, train_model_g, data_folder):
     # getting the best recommendations from movies & games model
     best_recom_mg = games_movies_recom(user, item_ids, item_ratings, train_model_mg)
     print 'best_recom_mg productID', best_recom_mg['productID']
     # Recommending movies and games trough item similarity with other datasets
     # item-item similarity
-    print "Are we passing here?"
+
     recm_sim_mg = train_model_m.get_similar_items(best_recom_mg['productID'], k=1)
     recg_sim_mg = train_model_g.get_similar_items(best_recom_mg['productID'], k=1)
+
     """
     # user-use similarity
     userm_sim_mg = train_model_m.get_similar_users(best_recom_mg['userID'], k=1)
@@ -49,8 +52,9 @@ def recommender_process(user, item_ids, item_ratings, train_model_mg, train_mode
     final = final_recom_(recm_sim_mg, recg_sim_mg)
 
     # load games and movies dictionary
-    games_data = pickle.load( open( "../../data/games.p", "rb" ) )
-    recom = if_no_game(final, games_data)
+    games_data = pickle.load( open( data_folder + "/games.p", "rb" ) )
+
+    recom = if_no_game(final, games_data, data_folder)
 
 
     """# getting the best recommendations from movies model
@@ -80,9 +84,9 @@ def final_recom_(recm_sim_mg, recg_sim_mg):
     final.extend(recg_sim_mg['similar'])
     return final
 
-def if_no_game(final_recommendation, games_data):
+def if_no_game(final_recommendation, games_data, data_folder):
     # load best games data
-    best_games = pickle.load( open( "../../data/best_games.p", "rb" ) )
+    best_games = pickle.load( open( data_folder + "/best_games.p", "rb" ) )
 
     diff = list(set(games_data['productID']) - set(final_recommendation))
 
@@ -105,16 +109,16 @@ if __name__ =='__main__':
     item_ratings = [1, 1, 5, 3, 1, 1, 4, 3, 1, 1]
 
     # getting the recommendations from the three models
-    userm_sim_mg, userg_sim_mg, recm_sim_mg, recg_sim_mg = \
-            recommender_process(user, item_ids, item_ratings,
-                                t_model_m_g, t_model_m, t_model_g)
-    print 'Recommended movies from mg', recm_sim_mg
-    print 'Recommended games from mg', recg_sim_mg
+    recom = recommender_process(user, item_ids, item_ratings,
+                                t_model_m_g, t_model_m, t_model_g,
+                                '../data')
+    print 'Recommended movies from mg', recom
+    '''print 'Recommended games from mg', recg_sim_mg
     print ''
 
     print 'Recommended users(movies) from mg', userm_sim_mg
     print 'Recommended users(games) from mg', userg_sim_mg
-    print ''
+    print '''''
 
     """print 'Recommended movies/games from m', recmg_sim_m
     print 'Recommended games from m', recg_sim_m
