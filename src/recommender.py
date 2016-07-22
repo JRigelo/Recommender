@@ -49,12 +49,12 @@ def recommender_process(user, item_ids, item_ratings, train_model_mg, train_mode
     userg_sim_mg = train_model_g.get_similar_users(best_recom_mg['userID'], k=1)
     """
 
-    final = final_recom_(recm_sim_mg, recg_sim_mg)
+    recom = final_recom_(recm_sim_mg, recg_sim_mg)
 
     # load games and movies dictionary
-    games_data = pickle.load( open( data_folder + "/games.p", "rb" ) )
+    #games_data = pickle.load( open( data_folder + "/games.p", "rb" ) )
 
-    recom = if_no_game(final, games_data, data_folder)
+    #recom = if_no_game(recom, games_data, data_folder)
 
 
     """# getting the best recommendations from movies model
