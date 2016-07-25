@@ -67,11 +67,12 @@ def training_data(train_data, dictionary = True):
     """the factorization_recommender will return the
        nearest items based on the cosine similarity between
         latent item factors."""
-
+    #print 'train_data', train_data['userID']
     if dictionary:
         sf = gl.SFrame(train_data)
     else:
         sf = gl.SFrame(train_data[['userID', 'productID', 'rating']])
+    #print 'sf', sf
 
     # Create a matrix factorization model
     rec = gl.recommender.factorization_recommender.create(
@@ -80,31 +81,11 @@ def training_data(train_data, dictionary = True):
             item_id='productID',
             target='rating',
             linear_regularization=1e-09,
-            max_iterations=25,
-            num_factors=8,
+            max_iterations=50,
+            num_factors=16,
             regularization= 1e-07,
             side_data_factorization=False)
-    return rec
 
-def train_data_multi_prod2(train_data, dictionary = True):
-    """A RankingFactorizationRecommender learns latent factors for each
-        user and item and uses them to rank recommended items according to the
-        likelihood of observing those (user, item) pairs.."""
-
-    if dictionary:
-        sf = gl.SFrame(train_data)
-    else:
-        sf = gl.SFrame(train_data[['userID', 'productID', 'rating']])
-
-    # Create a matrix factorization model
-    rec = gl.recommender.ranking_factorization_recommender.create(
-            sf,
-            user_id='userID',
-            item_id='productID',
-            target='rating',
-            #solver='als',
-            max_iterations=1000,
-            side_data_factorization=False)
     return rec
 
 
@@ -131,7 +112,7 @@ if __name__ =='__main__':
     games = dp.save_games(df_games)
     movies = dp.save_movies(df_movies)
     mg = dp.output_api(movies, games)
-    print mg
+
 
 
     '''# parameter search
@@ -162,11 +143,11 @@ if __name__ =='__main__':
 
 
     # training Data
-    #train_m_g = training_data(movies_and_games)
-    #train_m = training_data(df_movies, dictionary = False)
-    #train_g = training_data(df_games, dictionary = False)
+    train_m_g = training_data(movies_and_games)
+    train_m = training_data(df_movies, dictionary = False)
+    train_g = training_data(df_games, dictionary = False)
 
     # saving models
-    #save_model(train_m_g, '../data/model_m_g')
-    #save_model(train_m, '../data/model_m')
-    #save_model(train_g, '../data/model_g')
+    save_model(train_m_g, '../data/model_m_g')
+    save_model(train_m, '../data/model_m')
+    save_model(train_g, '../data/model_g')
