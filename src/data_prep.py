@@ -65,7 +65,6 @@ def data_featuring_movies(df_movies_json, df_movies_csv):
     # drop movies with no title
     df_movies_json.dropna(inplace=True, subset = ['title'])
     # merging two movies dataset
-    #df_no_dupl = df_movies_csv.drop_duplicates(subset=['productID'])
     return df_movies_csv.merge(df_movies_json, left_on='productID', right_on='productID', how='inner')
 
 def data_featuring_games(df_games_json, df_games_csv):
@@ -119,9 +118,10 @@ def data_featuring_games(df_games_json, df_games_csv):
     return df_games_csv.merge(df1, left_on='productID', right_on='productID', how='inner')
 
 def data_intersection(df1,df2):
-    df1_no_dupl = df1.drop_duplicates(subset=['userID'])
-    return df1_no_dupl.merge(df2.drop_duplicates(subset=['userID']), left_on='userID',\
+    #df1_no_dupl = df1.drop_duplicates(subset=['userID'])
+    return df1.merge(df2.drop_duplicates(subset=['userID']), left_on='userID',\
             right_on='userID', how='inner')
+
 
 def df_inter_dict(df):
     # movies dictionary
@@ -142,12 +142,12 @@ def df_inter_dict(df):
     dict_movies['title'] = title_lst
 
     #saving input for movies in intersection
-    """movies_input = {}
+    movies_input = {}
     for v1, v2 in zip(dict_movies['title'], dict_movies['productID']):
             movies_input[v1] = v2
     # saving to a pickle file
     pickle.dump( movies_input, open( "../data/movies_input.p", "wb" ) )
-    """
+
     # games dictionary
     dict_games = defaultdict(list)
     # converting df columns to lists
@@ -160,11 +160,11 @@ def df_inter_dict(df):
     dict_games['productID'] = productID_y_lst
     dict_games['rating'] = rating_y_lst
     dict_games['imUrl'] = imUrl_y_lst
-    """
+
     #saving input for games in intersection
     games_input = zip(dict_games['imUrl'], dict_games['productID'])
     pickle.dump( games_input, open( "../data/games_input.p", "wb" ) )
-    """
+
     #adding the two dictionaries
     dict_movies['userID'].extend(dict_games['userID'])
     dict_movies['productID'].extend(dict_games['productID'])
@@ -176,7 +176,12 @@ def df_inter_dict(df):
     mg_inter['productID'] = dict_movies['productID']
     mg_inter['rating'] = dict_movies['rating']
 
-    return mg_inter
+    df_inters = pd.DataFrame(mg_inter)
+
+    # saving to a pickle file
+    pickle.dump( df_inters, open( "../data/movies_games.p", "wb" ) )
+
+    return  mg_inter
 
 def top_games(df):
     # selecting games with rating 5
