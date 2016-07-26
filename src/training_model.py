@@ -106,6 +106,9 @@ if __name__ =='__main__':
     movies_and_games, df_movies, df_games = \
         data_prep_(movies_csv, games_csv, movies_json, games_json)
 
+    #Saving data for recommender
+
+
     # saving best games
     dp.top_games(df_games)
     # saving games and movies
