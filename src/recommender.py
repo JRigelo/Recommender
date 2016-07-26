@@ -16,6 +16,8 @@ import random
 games_data = pickle.load( open( "../data/games.p", "rb" ) )
 # load best games data
 best_games = pickle.load( open( "../data/best_games.p", "rb" ) )
+# load intersection data
+df_inters = pickle.load( open( "../data/movies_games.p", "rb" ) )
 
 def load_sparse_matrix(filename):
     y = np.load(filename)
@@ -32,10 +34,37 @@ def games_movies_recom(user, item_ids, item_ratings, train_model):
     for i in range(0,len(item_ids)):
         users_ids.append(user)
 
-
     # making a suggestion model
     newdata = gl.SFrame({'userID': users_ids, 'productID': item_ids, 'rating': item_ratings})
     return train_model.recommend(users=[user], k=3, new_observation_data=newdata)
+
+def norm(ratings_dict):
+    n = 0.0
+    for item, rating in ratings_dict.iteritems():
+        n += rating*rating
+    return np.sqrt(n)
+
+def calc_similarity(old_ratings_dict, new_ratings_dict):
+    score = 0.0
+    for item, rating in old_ratings_dict.iteritems():
+        if item in new_ratings_dict:
+            score += rating * new_ratings_dict[item]
+    return score / (norm(old_ratings_dict) * norm(new_ratings_dict))
+
+def build_user_group_dictionary(df):
+    groups = df.groupby('userID')
+    dict_ = groups.apply(lambda innerdf: innerdf.to_dict(orient='list')).to_dict()
+    def convert(value):
+        return {itemid: rating for itemid, rating in zip(value['productID'], value['rating'])}
+    return {userid: convert(value) for userid, value in dict_.iteritems()}
+
+def find_similar_user(user_groups, item_ids, ratings):
+    new_ratings_dict = {item: rating for item, rating in zip(item_ids, ratings)}
+    sims = [(user, calc_similarity(old_ratings_dict, new_ratings_dict))
+                for user, old_ratings_dict in user_groups.iteritems()]
+    sims = sorted(sims, cmp=lambda x,y: -cmp(x[1], y[1]))
+    return sims[0][0]
+
 
 def recommender_process(user, item_ids, item_ratings, train_model_mg, train_model_m, train_model_g, data_folder):
     # getting the best recommendations from movies & games model
@@ -48,23 +77,29 @@ def recommender_process(user, item_ids, item_ratings, train_model_mg, train_mode
     print 'rating', item_ratings
     print 'train_model_mg', train_model_mg
 
-    # making a suggestion model
+    intersection_user_group_dict = build_user_group_dictionary(df_inters)
+    sim_user = find_similar_user(intersection_user_group_dict, item_ids,
+        item_ratings)
+
+    best_recom_mg = train_model_mg.recommend(users=[sim_user])
+
+
+    """# making a suggestion model
     newdata = gl.SFrame({'userID': users_ids, 'productID': item_ids, 'rating': item_ratings})
     best_recom_mg = train_model_mg.recommend(users=[user], k=3, new_observation_data=newdata)
-
+    """
 
     print 'best_recom_mg productID', best_recom_mg['productID']
 
-    # Similar items within other datasets 
+    # Similar items within other datasets
     recm_sim_mg = train_model_m.get_similar_items(best_recom_mg['productID'], k=1)
     recg_sim_mg = train_model_g.get_similar_items(best_recom_mg['productID'], k=1)
 
     # Putting the recommendations together
     recom = final_recom_(recm_sim_mg, recg_sim_mg)
 
-    # load games and movies dictionary
-    #games_data = pickle.load( open( data_folder + "/games.p", "rb" ) )
-
+    # I there are no games suggested we can get some top rated one randomly
+    # Maybe change to popular?
     recom = if_no_game(recom, games_data, data_folder)
 
     return recom
