@@ -12,11 +12,11 @@ import cPickle as pickle
 import random
 
 # load games and movies dictionary
-games_data = pickle.load( open( "../../data/games.p", "rb" ) )
+games_data = pickle.load( open( "../data/games.p", "rb" ) )
 # load best games data
-best_games = pickle.load( open( "../../data/best_games.p", "rb" ) )
+best_games = pickle.load( open( "../data/best_games.p", "rb" ) )
 # load intersection data
-df_inters = pickle.load( open( "../../data/movies_games.p", "rb" ) )
+df_inters = pickle.load( open( "../data/movies_games.p", "rb" ) )
 
 def load_sparse_matrix(filename):
     y = np.load(filename)
