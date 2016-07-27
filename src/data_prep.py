@@ -20,7 +20,7 @@ def data_cleaner_csv(filename):
     df.columns = ['userID', 'productID', 'rating', 'ratetime']
     # droping ratetime column
     df.drop('ratetime', axis=1, inplace=True)
-    
+
     return df
 
 def data_cleaner_json(path1, path2):
@@ -165,8 +165,9 @@ def output_api(df):
     mg_out['imUrl'] = imUrl_lst
 
     for v1, v2 in zip(mg_out['productID'], mg_out['imUrl']):
-            mg_out[v1].append(v2)
-            mg_out[v1].append('http://amazon.com/dp/' + v1)
+            if v1 not in mg_out:
+                mg_out[v1].append(v2)
+                mg_out[v1].append('http://amazon.com/dp/' + v1)
 
     # saving to a pickle file
     pickle.dump( mg_out, open( "../data/output_api.p", "wb" ) )
