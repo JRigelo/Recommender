@@ -20,6 +20,7 @@ def data_cleaner_csv(filename):
     df.columns = ['userID', 'productID', 'rating', 'ratetime']
     # droping ratetime column
     df.drop('ratetime', axis=1, inplace=True)
+    
     return df
 
 def data_cleaner_json(path1, path2):
@@ -118,12 +119,97 @@ def data_featuring_games(df_games_json, df_games_csv):
     return df_games_csv.merge(df1, left_on='productID', right_on='productID', how='inner')
 
 def data_intersection(df1,df2):
-    #df1_no_dupl = df1.drop_duplicates(subset=['userID'])
-    return df1.merge(df2.drop_duplicates(subset=['userID']), left_on='userID',\
-            right_on='userID', how='inner')
+    movie_users = set(df1['userID'].tolist())
+    game_users = set(df2['userID'].tolist())
+    intersection_users = (movie_users & game_users)
+
+    movie_mask = df1['userID'].isin(intersection_users)
+    df_movie_ratings_intersection = df1[movie_mask].reset_index(drop=True)
+
+    #saving input for movies in intersection (API autocomplete input)
+    movies_from_inter(df_movie_ratings_intersection)
+
+    game_mask = df2['userID'].isin(intersection_users)
+    df_game_ratings_intersection = df2[game_mask].reset_index(drop=True)
+    #saving input for games in intersection (API games sample input)
+    games_from_inter(df_game_ratings_intersection)
+
+    df_iter = pd.concat([df_movie_ratings_intersection, df_game_ratings_intersection ])
+
+    # API output
+    output_api(df_iter)
+    return df_iter
+
+def movies_from_inter(dict_movies):
+    movies_input = {}
+    for v1, v2 in zip(dict_movies['title'], dict_movies['productID']):
+            movies_input[v1] = v2
+    # saving to a pickle file
+    pickle.dump( movies_input, open( "../data/movies_input.p", "wb" ) )
+
+def games_from_inter(dict_games):
+    games_input = zip(dict_games['imUrl'], dict_games['productID'])
+    pickle.dump( games_input, open( "../data/games_input.p", "wb" ) )
+
+
+def output_api(df):
+    #saving output for movies and games
+    mg_out = defaultdict(list)
+
+    # converting df columns to lists
+    productID_lst = df.productID.tolist()
+    imUrl_lst = df.imUrl.tolist()
+
+    # lists will be the values of the dictionary
+    mg_out['productID'] = productID_lst
+    mg_out['imUrl'] = imUrl_lst
+
+    for v1, v2 in zip(mg_out['productID'], mg_out['imUrl']):
+            mg_out[v1].append(v2)
+            mg_out[v1].append('http://amazon.com/dp/' + v1)
+
+    # saving to a pickle file
+    pickle.dump( mg_out, open( "../data/output_api.p", "wb" ) )
+
+
+def api_endpoints_datasets(df1,df2):
+    df1 = df1.drop_duplicates(subset=['userID'])
+    df = df1.merge(df2.drop_duplicates(subset=['userID']), left_on='userID', right_on='userID', how='inner')
+    df.dropna(inplace=True, subset = ['productID_x', 'productID_y'])
+
+    # movies and games dictionaries
+    dict_movies = defaultdict(list)
+    dict_games = defaultdict(list)
+
+    # converting df columns to lists
+    productID_x_lst = df.productID_x.tolist()
+    imUrl_x_lst = df.imUrl_x.tolist()
+    title_lst = df.title.tolist()
+
+    # lists will be the values of the dictionary
+    dict_movies['productID'] = productID_x_lst
+    dict_movies['imUrl'] = imUrl_x_lst
+    dict_movies['title'] = title_lst
+
+    #saving input for movies in intersection (API autocomplete input)
+    movies_from_inter(dict_movies)
+
+    # Adding games (from the intersection)
+    productID_y_lst = df.productID_y.tolist()
+    imUrl_y_lst = df.imUrl_y.tolist()
+    # lists will be the values of the dictionary
+    dict_games['productID'] = productID_y_lst
+    dict_games['imUrl'] = imUrl_y_lst
+
+    #saving input for games in intersection (API games sample input)
+    games_from_inter(dict_games)
+
+    #adding the two dictionaries for API output
+    output_api(dict_movies, dict_games)
 
 
 def df_inter_dict(df):
+    #NEEDS TO BE FIXED
     # movies dictionary
     dict_movies = defaultdict(list)
     mg_inter = defaultdict(list)
@@ -141,13 +227,6 @@ def df_inter_dict(df):
     dict_movies['imUrl'] = imUrl_x_lst
     dict_movies['title'] = title_lst
 
-    #saving input for movies in intersection
-    movies_input = {}
-    for v1, v2 in zip(dict_movies['title'], dict_movies['productID']):
-            movies_input[v1] = v2
-    # saving to a pickle file
-    pickle.dump( movies_input, open( "../data/movies_input.p", "wb" ) )
-
     # games dictionary
     dict_games = defaultdict(list)
     # converting df columns to lists
@@ -160,10 +239,6 @@ def df_inter_dict(df):
     dict_games['productID'] = productID_y_lst
     dict_games['rating'] = rating_y_lst
     dict_games['imUrl'] = imUrl_y_lst
-
-    #saving input for games in intersection
-    games_input = zip(dict_games['imUrl'], dict_games['productID'])
-    pickle.dump( games_input, open( "../data/games_input.p", "wb" ) )
 
     #adding the two dictionaries
     dict_movies['userID'].extend(dict_games['userID'])
@@ -198,6 +273,7 @@ def top_games(df):
     dict_games['productID'] = productID_lst
     dict_games['rating'] = rating_lst
     dict_games['imUrl'] = imUrl_lst
+
     # saving to a pickle file
     pickle.dump( dict_games, open( "../data/best_games.p", "wb" ) )
 
@@ -218,7 +294,6 @@ def save_games(df):
     # saving to a pickle file
     pickle.dump( dict_games, open( "../data/games.p", "wb" ) )
 
-    return dict_games
 
 def save_movies(df):
     # movies dictionary
@@ -239,119 +314,36 @@ def save_movies(df):
     # saving to a pickle file
     pickle.dump( dict_movies, open( "../data/movies.p", "wb" ) )
 
-    return dict_movies
-
-
-def subtract_intersection(df1,df_inner):
-    users_lst = df_inner.userID.tolist()
-    df1_no_dupl = df1.drop_duplicates(subset=['userID'])
-    return  df1_no_dupl.query('userID not in @users_lst')
-
-
-def utility_matrix_lil(df):
-    '''
-    INPUT: pandas dataframe
-    OUTPUT: scipy sparse matrix
-
-    Returns two dictionaries for user and product IDs and an utility matrix
-    '''
-    user_unique = df.userID.unique()
-    product_unique = df.productID.unique()
-    user_num_ID = {name: index for index, name in enumerate(user_unique)}
-    product_num_ID = {name: index for index, name in enumerate(product_unique)}
-    util_matrix = sparse.lil_matrix((len(user_unique), len(product_unique)))
-    for _, row in df.iterrows():
-        util_matrix[user_num_ID[row.userID], product_num_ID[row.productID]] = row.rating
-    return user_num_ID, product_num_ID, util_matrix
-
-
-def matrix_intersect(df_inner):
-    '''
-    INPUT: pandas dataframe
-    OUTPUT: scipy sparse matrix
-
-    Returns three dictionaries for user and product IDs and an utility matrix
-    '''
-    user_unique = df_inner.userID.unique()
-    product_unique_x = df_inner.productID_x.unique()
-    product_unique_y = df_inner.productID_y.unique()
-    user_num_ID = {name: index for index, name in enumerate(user_unique)}
-    product_ID_x = {name: index for index, name in enumerate(product_unique_x)}
-    product_ID_y = {name: index for index, name in enumerate(product_unique_y)}
-
-    util_matrix_x = sparse.lil_matrix((len(user_unique), len(product_unique_x)))
-    util_matrix_y = sparse.lil_matrix((len(user_unique), len(product_unique_y)))
-    for _, row in df_inner.iterrows():
-        util_matrix_x[user_num_ID[row.userID], product_ID_x[row.productID_x]] = row.rating_x
-    for _, row in df_inner.iterrows():
-        util_matrix_y[user_num_ID[row.userID], product_ID_y[row.productID_y]] = row.rating_y
-    # concatenating two matrices by column
-    util_matrix = sparse.hstack((util_matrix_x, util_matrix_y))
-    return user_num_ID, product_ID_x, product_ID_y, util_matrix
-
-
-def block_matrix(matrix1, matrix2):
-    '''
-    INPUT: two scipy sparse matrices
-    OUTPUT: one scipy sparse matrix
-
-    Returns a concatenated utility matrix
-    '''
-    return sparse.block_diag((matrix1, matrix2)).toarray()
-
-def concat(final_matrix, inner_matrix):
-    '''
-    INPUT: two scipy sparse matrices
-    OUTPUT: one scipy sparse matrix
-
-    Returns a concatenated utility matrix
-    '''
-    return sparse.vstack((inner_matrix, final_matrix))
-
-def save_sparse_matrix(filename,x):
-    x_coo = x.tocoo()
-    row = x_coo.row
-    col = x_coo.col
-    data = x_coo.data
-    shape = x_coo.shape
-    np.savez(filename,row=row,col=col,data=data,shape=shape)
-
-def output_api(dict_movies, dict_games):
-    #saving output for movies and games
-    mg_out = defaultdict(list)
-    for v1, v2 in zip(dict_movies['productID'], dict_movies['imUrl']):
-            mg_out[v1].append(v2)
-            mg_out[v1].append('http://amazon.com/dp/' + v1)
-
-    for v1, v2 in zip(dict_games['productID'], dict_games['imUrl']):
-            mg_out[v1].append(v2)
-            mg_out[v1].append('http://amazon.com/dp/' + v1)
-    # saving to a pickle file
-    pickle.dump( mg_out, open( "../data/output_api.p", "wb" ) )
-
-    return mg_out
-
 
 if __name__ == '__main__':
-    # csv data files
-    games_file = '../data/ratings_Video_Games.csv'
-    movies_file = '../data/ratings_Movies_and_TV.csv'
-
+    # Getting the the AP1 endpoints datasets
     # cleaning csv datasets
-    df_games = data_cleaner_csv(games_file)
-    df_movies = data_cleaner_csv(movies_file)
+    # csv data files
+    movies_csv = '../data/ratings_Movies_and_TV.csv'
+    games_csv = '../data/ratings_Video_Games.csv'
+
+    # json.gz data files
+    movies_json = '../data/meta_Movies_and_TV.json.gz'
+    games_json = '../data/meta_Video_Games.json.gz'
 
 
-    # inner join of two datasets on usersID
-    df_inter = data_intersection(df_movies, df_games)
+    df_movies_csv = data_cleaner_csv(movies_csv)
+    df_games_csv = data_cleaner_csv(games_csv)
 
-    # subtracting common users
-    df_games = subtract_intersection(df_games, df_inter)
-    df_movies = subtract_intersection(df_movies, df_inter)
+    # cleaning json.gz data files
+    df_movies_json, df_games_json = data_cleaner_json(movies_json, games_json)
 
-    # creating utility matrices
-    user_games_ID, prod_games_ID, util_games_M = utility_matrix_lil(df_games)
-    user_movies_ID, prod_movies_ID, util_movies_M = utility_matrix_lil(df_movies)
+    # data featuring for the movies
+    df_movies = data_featuring_movies(df_movies_json, df_movies_csv)
+    # data featuring for the games
+    df_games = data_featuring_games(df_games_json, df_games_csv)
 
-    # Preping the intersection matrix
-    user_games_ID, prod_movies_ID, prod_movies_ID, movies_game_M = matrix_intersect(df_inter)
+    # creating input/output
+    api_endpoints_datasets(df_movies, df_games)
+
+    # other datasets
+    # saving best games
+    top_games(df_games)
+    # saving games and movies
+    save_games(df_games)
+    save_movies(df_movies)
