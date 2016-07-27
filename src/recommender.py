@@ -1,5 +1,4 @@
-""" Recommender capstone model: SVD, NMF, item-item, user-user
-
+""" Recommender capstone model: latent factors, item-item, user-user
 """
 import pandas as pd
 from scipy import sparse
@@ -13,11 +12,11 @@ import cPickle as pickle
 import random
 
 # load games and movies dictionary
-games_data = pickle.load( open( "../data/games.p", "rb" ) )
+games_data = pickle.load( open( "../../data/games.p", "rb" ) )
 # load best games data
-best_games = pickle.load( open( "../data/best_games.p", "rb" ) )
+best_games = pickle.load( open( "../../data/best_games.p", "rb" ) )
 # load intersection data
-df_inters = pickle.load( open( "../data/movies_games.p", "rb" ) )
+df_inters = pickle.load( open( "../../data/movies_games.p", "rb" ) )
 
 def load_sparse_matrix(filename):
     y = np.load(filename)
@@ -72,10 +71,6 @@ def recommender_process(user, item_ids, item_ratings, train_model_mg, train_mode
     users_ids = []
     for i in range(0,len(item_ids)):
         users_ids.append(user)
-    print 'users_ids', users_ids
-    print 'productID', item_ids
-    print 'rating', item_ratings
-    print 'train_model_mg', train_model_mg
 
     intersection_user_group_dict = build_user_group_dictionary(df_inters)
     sim_user = find_similar_user(intersection_user_group_dict, item_ids,
@@ -139,6 +134,7 @@ if __name__ =='__main__':
     # toy example to test recommender
     user = 'Joyce'
     item_ids = ['0439671418', 'B00004W0W7', '0439715571', '6301759338', '0700099867']
+
     #            '3868832815', '0970154097', 'B00007JME6', '1886846847', 'B0007MWZIG','B0001VL0K2']
     item_ratings = [1, 1, 5, 3, 1] #1, 4, 3, 1, 1, 4]
 
