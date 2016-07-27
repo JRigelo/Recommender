@@ -76,7 +76,7 @@ def recommender_process(user, item_ids, item_ratings, train_model_mg, train_mode
     sim_user = find_similar_user(intersection_user_group_dict, item_ids,
         item_ratings)
 
-    best_recom_mg = train_model_mg.recommend(users=[sim_user])
+    best_recom_mg = train_model_mg.recommend(users=[sim_user], k=3)
 
 
     """# making a suggestion model
