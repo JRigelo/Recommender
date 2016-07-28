@@ -43,16 +43,17 @@ def training_data(train_data, dictionary = True):
     #print 'sf', sf
 
     # Create a matrix factorization model
-    rec = gl.recommender.factorization_recommender.create(
+    rec = gl.recommender.ranking_factorization_recommender.create(
             sf,
             user_id='userID',
             item_id='productID',
             target='rating',
-            linear_regularization=1e-09,
-            max_iterations=50,
-            num_factors=16,
-            regularization= 1e-07,
-            side_data_factorization=False)
+            #linear_regularization=1e-09,
+            max_iterations=100,
+            #num_factors=16,
+            #regularization = 1e-07,
+            #side_data_factorization=False
+        )
 
     return rec
 
