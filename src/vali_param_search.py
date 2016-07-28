@@ -1,3 +1,31 @@
+import pandas as pd
+from scipy import sparse
+import numpy as np
+import data_prep as dp
+import graphlab as gl
+import json
+from pprint import pprint
+
+def data_prep_(path1, path2, path3, path4):
+    # cleaning csv datasets
+    df_movies_csv = dp.data_cleaner_csv(path1)
+    df_games_csv = dp.data_cleaner_csv(path2)
+
+    # cleaning json.gz data files
+    df_movies_json, df_games_json = \
+        dp.data_cleaner_json(path3, path4)
+
+    # data featuring for the movies
+    df_movies = dp.data_featuring_movies(df_movies_json, df_movies_csv)
+    # data featuring for the games
+    df_games = dp.data_featuring_games(df_games_json, df_games_csv)
+
+    # inner join of two datasets on usersID
+    df_inter = dp.data_intersection(df_movies, df_games)
+
+
+    return df_inter, df_movies, df_games
+
 def param_search_(train_data, dataframe=True, cv=5):
     if dataframe:
         # SFrame (dictionary from df)
@@ -12,7 +40,7 @@ def param_search_(train_data, dataframe=True, cv=5):
                         kfolds,
                         gl.recommender.factorization_recommender.create,
                         params)
-                        
+
     return paramsearch
 
 def validation_(train_data, dataframe=True, cv=5):
@@ -26,7 +54,7 @@ def validation_(train_data, dataframe=True, cv=5):
                   linear_regularization=1e-09, max_iterations=25, num_factors=8,
                   regularization= 0.0001, side_data_factorization=False)
     job = gl.cross_validation.cross_val_score(kfolds,
-                                              gl.factorization_recommender.create,
+                                              gl.ranking_factorization_recommender.create,
                                               params)
     return job.get_results()
 
@@ -46,7 +74,7 @@ if __name__ =='__main__':
     movies_and_games, df_movies, df_games = \
         data_prep_(movies_csv, games_csv, movies_json, games_json)
 
-    # parameter search
+    """# parameter search
     param_search = param_search_(df_games)
     print 'get_status', param_search.get_status()
     #print 'get_metrics', param_search.get_metrics()
@@ -62,11 +90,12 @@ if __name__ =='__main__':
 
     print "best params by rmse:"
     pprint(param_search.get_best_params('mean_validation_rmse'))
+    """
 
     # cross validation
-    val_games = validation_(df_games)
-    print 'val_games', val_games
-    val_mg = validation_(movies_and_games, dataframe=False)
+    #val_games = validation_(df_games)
+    #print 'val_games', val_games
+    val_mg = validation_(movies_and_games)
     print 'val_mg', val_mg
-    val_movies = validation_(df_movies)
-    print 'val_movies', val_movies
+    #val_movies = validation_(df_movies)
+    #print 'val_movies', val_movies
