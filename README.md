@@ -25,7 +25,7 @@ Datasets contain product ratings from Amazon spanning May 1996 - July 2014
 
    cd src/  
 
-    1. Create a data folder and (from the source above) add the following files to it:   
+    1. Create a data folder (at the same level as src) and (from the source above) add the following files to it:   
 
      ratings_Movies_and_TV.csv  
      ratings_Video_Games.csv  
