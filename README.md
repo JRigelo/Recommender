@@ -21,17 +21,17 @@ Datasets contain product ratings from Amazon spanning May 1996 - July 2014
    dataset I created containing the common users from movies and games.
 
 
-#   To run this code:
+#   To run this code:  
 
-   cd src/  
-
-    1. Create a data folder (at the same level as src) and  
-    (from the source above) add the following files to it:   
+    1. mkdir data   
+    and add the following files to it:   
 
      ratings_Movies_and_TV.csv  
      ratings_Video_Games.csv  
      meta_Movies_and_TV.json.gz  
-     meta_Video_Games.json.gz    
+     meta_Video_Games.json.gz  
+     
+cd src/    
 
     2. Train the models: `python training_model.py`  
     3. To get a recommendation: `python recommender.py`
@@ -43,7 +43,7 @@ Datasets contain product ratings from Amazon spanning May 1996 - July 2014
 # Model Approaches:
 
   - User-based:  users who share the same rating patterns
-  - Item-based:  relationships between two or more items
+  - Item-based: relationships between two or more items
   - Matrix factorization (latent factor models): characterizes both items and
   users by vectors  of factors inferred from item rating patterns.
 
