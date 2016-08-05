@@ -38,7 +38,7 @@ def param_search_(train_data, dataframe=True, cv=5):
                   side_data_factorization=False)
     paramsearch = gl.model_parameter_search.create(
                         kfolds,
-                        gl.recommender.factorization_recommender.create,
+                        gl.recommender.ranking_factorization_recommender.create,
                         params)
 
     return paramsearch
@@ -74,11 +74,11 @@ if __name__ =='__main__':
     movies_and_games, df_movies, df_games = \
         data_prep_(movies_csv, games_csv, movies_json, games_json)
 
-    """# parameter search
-    param_search = param_search_(df_games)
-    print 'get_status', param_search.get_status()
+    # parameter search
+    param_search = param_search_(movies_and_games)
+    #print 'get_status', param_search.get_status()
     #print 'get_metrics', param_search.get_metrics()
-    print 'get_results', param_search.get_results()
+    #print 'get_results', param_search.get_results()
 
     print "best params by recall@5:"
     pprint(param_search.get_best_params('mean_validation_recall@5'))
@@ -90,12 +90,12 @@ if __name__ =='__main__':
 
     print "best params by rmse:"
     pprint(param_search.get_best_params('mean_validation_rmse'))
-    """
+
 
     # cross validation
     #val_games = validation_(df_games)
     #print 'val_games', val_games
-    val_mg = validation_(movies_and_games)
-    print 'val_mg', val_mg
+    #val_mg = validation_(movies_and_games)
+    #print 'val_mg', val_mg
     #val_movies = validation_(df_movies)
     #print 'val_movies', val_movies
