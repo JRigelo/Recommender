@@ -9,16 +9,6 @@ Code written in Python.
  - numpy
  - graphlab: http://select.cs.cmu.edu/code/graphlab/
 
-To run this code:
-
-cd src/
-
- 1. Train the models: `python training_model.py`
- 1. To get a recommendation: `python recommender.py`
-
-If you want to use the API related to this project go to:
-       https://github.com/JRigelo/movies_games_api
-
 
 # Data:
 
@@ -29,6 +19,22 @@ Datasets contain product ratings from Amazon spanning May 1996 - July 2014
    instructions in the source above.
    I used three datasets in this model: movies, video games and a third
    dataset I created containing the common users from movies and games.
+
+
+#   To run this code:
+
+   cd src/
+    1. from the source above create a data folder and add the following files to it:
+    ratings_Movies_and_TV.csv
+    ratings_Video_Games.csv
+    meta_Movies_and_TV.json.gz
+    meta_Video_Games.json.gz
+    1. Train the models: `python training_model.py`
+    1. To get a recommendation: `python recommender.py`
+
+   If you want to use the API related to this project go to:
+          https://github.com/JRigelo/movies_games_api
+
 
 # Model Approaches:
 
