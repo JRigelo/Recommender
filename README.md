@@ -30,8 +30,8 @@ Datasets contain product ratings from Amazon spanning May 1996 - July 2014
      ratings_Video_Games.csv  
      meta_Movies_and_TV.json.gz  
      meta_Video_Games.json.gz  
-     
-cd src/    
+
+     cd src/    
 
     2. Train the models: `python training_model.py`  
     3. To get a recommendation: `python recommender.py`
