@@ -13,8 +13,8 @@ To run this code:
 
 cd src/
 
- 1. Train the models: ipython training_model.py
- 1. To get a recommendation: ipython recommender.py
+ 1. Train the models: `python training_model.py`
+ 1. To get a recommendation: `python recommender.py`
 
 If you want to use the API related to this project go to:
        https://github.com/JRigelo/movies_games_api
