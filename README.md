@@ -42,8 +42,8 @@ Datasets contain product ratings from Amazon spanning May 1996 - July 2014
 
 # Model Approaches:
 
-  - User-based: users who share the same rating patterns
-  - Item-based: relationships between two or more items
+  - User-based:  users who share the same rating patterns
+  - Item-based:  relationships between two or more items
   - Matrix factorization (latent factor models): characterizes both items and
   users by vectors  of factors inferred from item rating patterns.
 
