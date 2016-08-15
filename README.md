@@ -36,7 +36,8 @@ Datasets contain product ratings from Amazon spanning May 1996 - July 2014
     3. To get a recommendation: `python recommender.py`
 
    If you want to use the API related to this project go to:
-          https://github.com/JRigelo/movies_games_api
+          https://github.com/JRigelo/movies_games_api  
+   And to see it's final product: [Movies and Games REST API](http://recommenderapi.dsoracle.com/)
 
 
 # Model Approaches:
